@@ -1,0 +1,10 @@
+[package]
+name = "friz"
+version = "0.0.1"
+authors = ["Ryan Levick <ryan.levick@gmail.com>"]
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+egg-mode = "0.4.0"
