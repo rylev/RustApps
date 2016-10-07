@@ -30,24 +30,28 @@ pub unsafe extern fn twitter_destroy(twitter: *mut Twitter) {
     Box::from_raw(twitter);
 }
 
-pub type TweetIter = ();
+pub type TweetIter = std::vec::IntoIter<Tweet>;
 #[no_mangle]
-pub unsafe extern fn twitter_get(twitter: *mut Twitter) -> *mut TweetIter {
+pub unsafe extern fn tweet_iter_create(twitter: *mut Twitter) -> *mut TweetIter {
     let mut twitter = Box::from_raw(twitter);
     let vec = twitter.get();
-    let ptr = Box::into_raw(Box::new(vec.iter())) as *mut TweetIter;
-    std::mem::forget(vec);
-    ptr
+    Box::into_raw(Box::new(vec.into_iter()))
 }
 
-pub type FFITweet = ();
 #[no_mangle]
-pub unsafe extern fn tweet_iter_next<'a>(twitter_result: *mut TweetIter) -> *mut FFITweet {
-    let twitter_result = twitter_result as *mut std::slice::Iter<'a, Tweet>;
+pub unsafe extern fn tweet_iter_destroy(tweet_iter: *mut TweetIter) {
+    Box::from_raw(tweet_iter);
+}
+
+#[no_mangle]
+pub unsafe extern fn tweet_iter_next<'a>(twitter_result: *mut TweetIter) -> *mut Tweet {
+    let twitter_result = twitter_result as *mut std::vec::IntoIter<Tweet>;
     let mut iter = Box::from_raw(twitter_result);
+    println!("Going to get next");
     let ptr = iter.next().
-        map(|t| std::mem::transmute::<_, *mut FFITweet>(t)).
+        map(|t| Box::into_raw(Box::new(t))).
         unwrap_or(std::ptr::null_mut());
+    println!("got next");
 
     // Covert back to raw pointer so iter won't be dropped
     Box::into_raw(iter);
@@ -55,13 +59,21 @@ pub unsafe extern fn tweet_iter_next<'a>(twitter_result: *mut TweetIter) -> *mut
 }
 
 #[no_mangle]
-pub unsafe extern fn tweet_get_username<'a>(tweet: *mut FFITweet) -> RustByteSlice {
-    let tweet = std::mem::transmute::<_, &Tweet>(tweet);
-    let name = &tweet.username;
-    RustByteSlice {
-        bytes: name.as_ptr(),
-        length: name.len()
-    }
+pub unsafe extern fn tweet_get_username<'a>(tweet: *mut Tweet) -> RustByteSlice {
+    let tweet = Box::from_raw(tweet);
+    let slice = {
+        let name = &tweet.username;
+        RustByteSlice {
+            bytes: name.as_ptr(),
+            length: name.len()
+        }
+    };
+    Box::into_raw(tweet);
+    slice
+}
+
+pub unsafe extern fn tweet_destroy(tweet: *mut Tweet) {
+    Box::from_raw(tweet);
 }
 
 trait TwitterClient {
@@ -93,6 +105,7 @@ pub struct Tweet {
     username: String,
     text: String
 }
+
 impl Drop for Tweet {
     fn drop(&mut self) {
         println!("Dropping!");
@@ -124,7 +137,8 @@ fn twitter_returns_nonempty_vector() {
 fn capi_get_username() {
     unsafe {
         let twitter_ptr = twitter_create();
-        let iter_ptr = twitter_get(twitter_ptr);
+        let iter_ptr = tweet_iter_create(twitter_ptr);
+        println!("Got the tweitters");
         let tweet_ptr = tweet_iter_next(iter_ptr);
 
         assert!(!tweet_ptr.is_null());
@@ -136,5 +150,9 @@ fn capi_get_username() {
 
         let tweet_ptr = tweet_iter_next(iter_ptr);
         assert!(tweet_ptr.is_null());
+        println!("Passed");
+        tweet_destroy(tweet_ptr);
+        tweet_iter_destroy(iter_ptr);
+        println!("End test")
     }
 }
