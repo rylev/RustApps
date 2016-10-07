@@ -1,8 +1,10 @@
 extern crate egg_mode;
+extern crate libc;
 
 use std::str;
-use std::os::raw::c_char;
+use std::os::raw::{c_char, c_void};
 use std::ffi::CStr;
+use libc::size_t;
 
 #[no_mangle]
 pub extern fn rust_print(c_string_pointer: *const c_char) {
@@ -16,9 +18,85 @@ fn print_bytes(bytes: &[u8]) {
     }
 }
 
+#[no_mangle]
+pub extern fn twitter_create() -> *mut Twitter {
+    let twitter = Box::new(Twitter::new());
+
+    Box::into_raw(twitter)
+}
+
+#[no_mangle]
+pub unsafe extern fn twitter_destroy(twitter: *mut Twitter) {
+    Box::from_raw(twitter);
+}
+
+pub type TweetIter = ();
+#[no_mangle]
+pub unsafe extern fn twitter_get(twitter: *mut Twitter) -> *mut TweetIter {
+    let mut twitter = Box::from_raw(twitter);
+    let vec = twitter.get();
+    let ptr = Box::into_raw(Box::new(vec.iter())) as *mut TweetIter;
+    std::mem::forget(vec);
+    ptr
+}
+
+pub type FFITweet = ();
+#[no_mangle]
+pub unsafe extern fn tweet_iter_next<'a>(twitter_result: *mut TweetIter) -> *mut FFITweet {
+    let twitter_result = twitter_result as *mut std::slice::Iter<'a, Tweet>;
+    let mut iter = Box::from_raw(twitter_result);
+    let ptr = iter.next().
+        map(|t| std::mem::transmute::<_, *mut FFITweet>(t)).
+        unwrap_or(std::ptr::null_mut());
+
+    // Covert back to raw pointer so iter won't be dropped
+    Box::into_raw(iter);
+    ptr
+}
+
+#[no_mangle]
+pub unsafe extern fn tweet_get_username<'a>(tweet: *mut FFITweet) -> RustByteSlice {
+    let tweet = std::mem::transmute::<_, &Tweet>(tweet);
+    let name = &tweet.username;
+    RustByteSlice {
+        bytes: name.as_ptr(),
+        length: name.len()
+    }
+}
+
+trait TwitterClient {
+    fn get(&mut self) -> Vec<Tweet>;
+}
+
+#[repr(C)]
+pub struct Twitter {}
+
+impl Twitter {
+    fn new() -> Twitter {
+        Twitter {}
+    }
+}
+
+impl TwitterClient for Twitter {
+    fn get(&mut self) -> Vec<Tweet> {
+        vec![Tweet::new("Ryan Levick".to_owned(), "Some Text".to_owned())]
+    }
+}
+
+#[repr(C)]
+pub struct RustByteSlice {
+    bytes: *const u8,
+    length: size_t,
+}
+
 pub struct Tweet {
     username: String,
     text: String
+}
+impl Drop for Tweet {
+    fn drop(&mut self) {
+        println!("Dropping!");
+    }
 }
 
 impl Tweet {
@@ -35,26 +113,28 @@ impl Tweet {
     }
 }
 
-pub struct Twitter {
-    consumer_token: egg_mode::Token<'static>
+
+#[test]
+fn twitter_returns_nonempty_vector() {
+    let mut twitter = Twitter::new();
+    assert!(!twitter.get().is_empty());
 }
 
-impl Twitter {
-    pub fn new () -> Twitter {
-        let consumer_key = "";
-        let consumer_secret = "";
-        let consumer_token = egg_mode::Token::new(consumer_key, consumer_secret);
-        Twitter { consumer_token: consumer_token }
-    }
+#[test]
+fn capi_get_username() {
+    unsafe {
+        let twitter_ptr = twitter_create();
+        let iter_ptr = twitter_get(twitter_ptr);
+        let tweet_ptr = tweet_iter_next(iter_ptr);
 
-    pub fn tweets (&self, access_token: egg_mode::Token<'static>) -> Vec<Tweet> {
-        let mut timeline = egg_mode::tweet::home_timeline(&self.consumer_token, &access_token).with_page_size(10);
+        assert!(!tweet_ptr.is_null());
 
-        let mut tweets = Vec::new();
-        for tweet in &timeline.start().unwrap().response {
-            tweets.push(Tweet::new(tweet.user.screen_name.clone(), tweet.text.clone()));
-        }
+        let username_buffer = tweet_get_username(tweet_ptr);
+        let username_slice = std::slice::from_raw_parts(username_buffer.bytes, username_buffer.length);
+        let username = str::from_utf8_unchecked(username_slice);
+        assert!(username == "Ryan Levick");
 
-        tweets
+        let tweet_ptr = tweet_iter_next(iter_ptr);
+        assert!(tweet_ptr.is_null());
     }
 }
