@@ -2,7 +2,7 @@ extern crate egg_mode;
 extern crate libc;
 
 use std::str;
-use std::os::raw::{c_char, c_void};
+use std::os::raw::{c_char};
 use std::ffi::CStr;
 use libc::size_t;
 
@@ -44,14 +44,12 @@ pub unsafe extern fn tweet_iter_destroy(tweet_iter: *mut TweetIter) {
 }
 
 #[no_mangle]
-pub unsafe extern fn tweet_iter_next<'a>(twitter_result: *mut TweetIter) -> *mut Tweet {
+pub unsafe extern fn tweet_iter_next(twitter_result: *mut TweetIter) -> *mut Tweet {
     let twitter_result = twitter_result as *mut std::vec::IntoIter<Tweet>;
     let mut iter = Box::from_raw(twitter_result);
-    println!("Going to get next");
     let ptr = iter.next().
         map(|t| Box::into_raw(Box::new(t))).
         unwrap_or(std::ptr::null_mut());
-    println!("got next");
 
     // Covert back to raw pointer so iter won't be dropped
     Box::into_raw(iter);
@@ -59,7 +57,7 @@ pub unsafe extern fn tweet_iter_next<'a>(twitter_result: *mut TweetIter) -> *mut
 }
 
 #[no_mangle]
-pub unsafe extern fn tweet_get_username<'a>(tweet: *mut Tweet) -> RustByteSlice {
+pub unsafe extern fn tweet_get_username(tweet: *mut Tweet) -> RustByteSlice {
     let tweet = Box::from_raw(tweet);
     let slice = {
         let name = &tweet.username;
@@ -138,21 +136,20 @@ fn capi_get_username() {
     unsafe {
         let twitter_ptr = twitter_create();
         let iter_ptr = tweet_iter_create(twitter_ptr);
-        println!("Got the tweitters");
         let tweet_ptr = tweet_iter_next(iter_ptr);
 
         assert!(!tweet_ptr.is_null());
 
         let username_buffer = tweet_get_username(tweet_ptr);
         let username_slice = std::slice::from_raw_parts(username_buffer.bytes, username_buffer.length);
-        let username = str::from_utf8_unchecked(username_slice);
+        let username = str::from_utf8(username_slice).unwrap();
         assert!(username == "Ryan Levick");
 
-        let tweet_ptr = tweet_iter_next(iter_ptr);
-        assert!(tweet_ptr.is_null());
-        println!("Passed");
+        let null_ptr = tweet_iter_next(iter_ptr);
+        assert!(null_ptr.is_null());
+
         tweet_destroy(tweet_ptr);
         tweet_iter_destroy(iter_ptr);
-        println!("End test")
+        twitter_destroy(twitter_ptr);
     }
 }
