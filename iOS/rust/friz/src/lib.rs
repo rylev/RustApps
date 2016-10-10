@@ -1,4 +1,3 @@
-extern crate egg_mode;
 extern crate libc;
 
 use std::str;
@@ -70,6 +69,7 @@ pub unsafe extern fn tweet_get_username(tweet: *mut Tweet) -> RustByteSlice {
     slice
 }
 
+#[no_mangle]
 pub unsafe extern fn tweet_destroy(tweet: *mut Tweet) {
     Box::from_raw(tweet);
 }

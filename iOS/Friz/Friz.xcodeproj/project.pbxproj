@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6ACE480E1DA815F400457102 /* libfriz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6ACE480D1DA815F400457102 /* libfriz.a */; };
 		6AE3471C1D7B182300B3A49A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AE3471B1D7B182300B3A49A /* AppDelegate.swift */; };
 		6AE3471E1D7B182300B3A49A /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AE3471D1D7B182300B3A49A /* ViewController.swift */; };
 		6AE347211D7B182300B3A49A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6AE3471F1D7B182300B3A49A /* Main.storyboard */; };
@@ -15,6 +16,9 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		6ACE48071DA811E400457102 /* friz.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = friz.h; sourceTree = "<group>"; };
+		6ACE480A1DA812AF00457102 /* Friz-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Friz-Bridging-Header.h"; sourceTree = "<group>"; };
+		6ACE480D1DA815F400457102 /* libfriz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libfriz.a; path = ../libfriz.a; sourceTree = "<group>"; };
 		6AE347181D7B182300B3A49A /* Friz.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Friz.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6AE3471B1D7B182300B3A49A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		6AE3471D1D7B182300B3A49A /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -29,6 +33,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6ACE480E1DA815F400457102 /* libfriz.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -59,7 +64,10 @@
 				6AE3471F1D7B182300B3A49A /* Main.storyboard */,
 				6AE347221D7B182300B3A49A /* Assets.xcassets */,
 				6AE347241D7B182300B3A49A /* LaunchScreen.storyboard */,
+				6ACE480D1DA815F400457102 /* libfriz.a */,
+				6ACE48071DA811E400457102 /* friz.h */,
 				6AE347271D7B182300B3A49A /* Info.plist */,
+				6ACE480A1DA812AF00457102 /* Friz-Bridging-Header.h */,
 			);
 			path = Friz;
 			sourceTree = "<group>";
@@ -249,10 +257,18 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
 				INFOPLIST_FILE = Friz/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Friz",
+					"$(PROJECT_DIR)",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = io.ryanlevick.Friz;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "Friz/Friz-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
 		};
@@ -260,10 +276,17 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
 				INFOPLIST_FILE = Friz/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Friz",
+					"$(PROJECT_DIR)",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = io.ryanlevick.Friz;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "Friz/Friz-Bridging-Header.h";
 			};
 			name = Release;
 		};
@@ -286,6 +309,7 @@
 				6AE3472C1D7B182300B3A49A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

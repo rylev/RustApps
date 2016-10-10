@@ -8,6 +8,16 @@
 
 import UIKit
 
+extension RustByteSlice {
+    func asUnsafeBufferPointer() -> UnsafeBufferPointer<UInt8> {
+        return UnsafeBufferPointer(start: bytes, count: length)
+    }
+    
+    func asString(encoding: NSStringEncoding = NSUTF8StringEncoding) -> String? {
+        return String(bytes: asUnsafeBufferPointer(), encoding: encoding)
+    }
+}
+
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
@@ -15,6 +25,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
+        let twitter = twitter_create()
+        let iter = tweet_iter_create(twitter)
+        let tweet = tweet_iter_next(iter)
+        let slice  = tweet_get_username(tweet)
+        if let string = slice.asString() {
+            print("Got tweet from \(string)")
+        } else {
+            print("Nope")
+        }
+        
+        tweet_destroy(tweet)
+        tweet_iter_destroy(iter)
+        twitter_destroy(twitter)
         // Override point for customization after application launch.
         return true
     }

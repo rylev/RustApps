@@ -7,5 +7,4 @@ authors = ["Ryan Levick <ryan.levick@gmail.com>"]
 crate-type = ["staticlib"]
 
 [dependencies]
-egg-mode = "0.4.0"
 libc = "0.2.15"
