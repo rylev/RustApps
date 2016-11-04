@@ -77,15 +77,19 @@ struct DeserializedUser {
 	name: String
 }
 
-struct TwitterClient {
+#[repr(C)]
+pub struct TwitterAPIClient {
 
 }
 
-impl super::TwitterClient for TwitterClient {
+impl super::TwitterClient for TwitterAPIClient {
 	fn get(&mut self) -> Vec<Tweet> {
         let json = get_own_feed_as_json_string();
         let dtweets: Vec<DeserializedTweet> = serde_json::from_str(&json).unwrap();
-        let tweets = dtweets.into_iter().map(|dt| Tweet {username: dt.user.name, text: dt.text}).collect();
+        let tweets = dtweets.into_iter()
+        	.map(|dt| Tweet::new(dt.user.name, dt.text))
+        	.collect();
+
         tweets
     }
 }
