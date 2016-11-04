@@ -74,6 +74,20 @@ pub unsafe extern "C" fn tweet_get_username(tweet: *mut Tweet) -> RustByteSlice 
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn tweet_get_text(tweet: *mut Tweet) -> RustByteSlice {
+    let tweet = Box::from_raw(tweet);
+    let slice = {
+        let text = &tweet.text;
+        RustByteSlice {
+            bytes: text.as_ptr(),
+            length: text.len()
+        }
+    };
+    Box::into_raw(tweet);
+    slice
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn tweet_destroy(tweet: *mut Tweet) {
     Box::from_raw(tweet);
 }
