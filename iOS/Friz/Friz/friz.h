@@ -14,4 +14,5 @@ void* tweet_iter_create(void*);
 void tweet_iter_destroy(void*);
 void* tweet_iter_next(void*);
 struct RustByteSlice tweet_get_username(void*);
+struct RustByteSlice tweet_get_text(void*);
 void tweet_destroy(void*);

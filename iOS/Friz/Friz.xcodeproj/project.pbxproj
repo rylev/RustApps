@@ -11,12 +11,12 @@
 		0F7A8AD91DCCB57500E06657 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0F7A8AD81DCCB57500E06657 /* Foundation.framework */; };
 		0F7A8ADC1DCCB8E100E06657 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0F7A8ADA1DCCB8E100E06657 /* libcrypto.a */; };
 		0F7A8ADD1DCCB8E100E06657 /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0F7A8ADB1DCCB8E100E06657 /* libssl.a */; };
-		0FCB3BB21DCCA80B008EF405 /* libfriz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FCB3BB11DCCA80B008EF405 /* libfriz.a */; };
 		6AE3471C1D7B182300B3A49A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AE3471B1D7B182300B3A49A /* AppDelegate.swift */; };
 		6AE3471E1D7B182300B3A49A /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AE3471D1D7B182300B3A49A /* ViewController.swift */; };
 		6AE347211D7B182300B3A49A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6AE3471F1D7B182300B3A49A /* Main.storyboard */; };
 		6AE347231D7B182300B3A49A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6AE347221D7B182300B3A49A /* Assets.xcassets */; };
 		6AE347261D7B182300B3A49A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6AE347241D7B182300B3A49A /* LaunchScreen.storyboard */; };
+		6AEBF1881DCCC98C003F7C6E /* libfriz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6AEBF1871DCCC98C003F7C6E /* libfriz.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,7 +24,6 @@
 		0F7A8AD81DCCB57500E06657 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		0F7A8ADA1DCCB8E100E06657 /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libcrypto.a; sourceTree = "<group>"; };
 		0F7A8ADB1DCCB8E100E06657 /* libssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libssl.a; sourceTree = "<group>"; };
-		0FCB3BB11DCCA80B008EF405 /* libfriz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libfriz.a; sourceTree = "<group>"; };
 		6ACE48071DA811E400457102 /* friz.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = friz.h; sourceTree = "<group>"; };
 		6ACE480A1DA812AF00457102 /* Friz-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Friz-Bridging-Header.h"; sourceTree = "<group>"; };
 		6AE347181D7B182300B3A49A /* Friz.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Friz.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -34,6 +33,7 @@
 		6AE347221D7B182300B3A49A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		6AE347251D7B182300B3A49A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		6AE347271D7B182300B3A49A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		6AEBF1871DCCC98C003F7C6E /* libfriz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libfriz.a; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -44,8 +44,8 @@
 				0F7A8ADD1DCCB8E100E06657 /* libssl.a in Frameworks */,
 				0F7A8AD91DCCB57500E06657 /* Foundation.framework in Frameworks */,
 				0F7A8AD71DCCB56F00E06657 /* Security.framework in Frameworks */,
+				6AEBF1881DCCC98C003F7C6E /* libfriz.a in Frameworks */,
 				0F7A8ADC1DCCB8E100E06657 /* libcrypto.a in Frameworks */,
-				0FCB3BB21DCCA80B008EF405 /* libfriz.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -88,7 +88,7 @@
 				6AE347241D7B182300B3A49A /* LaunchScreen.storyboard */,
 				0F7A8ADA1DCCB8E100E06657 /* libcrypto.a */,
 				0F7A8ADB1DCCB8E100E06657 /* libssl.a */,
-				0FCB3BB11DCCA80B008EF405 /* libfriz.a */,
+				6AEBF1871DCCC98C003F7C6E /* libfriz.a */,
 				6ACE48071DA811E400457102 /* friz.h */,
 				6AE347271D7B182300B3A49A /* Info.plist */,
 				6ACE480A1DA812AF00457102 /* Friz-Bridging-Header.h */,
