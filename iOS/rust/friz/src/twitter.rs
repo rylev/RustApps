@@ -1,12 +1,18 @@
+#![feature(proc_macro)]
+
 extern crate url;
 extern crate hyper;
 extern crate rustc_serialize;
 extern crate oauthcli;
 
+extern crate serde;
+extern crate serde_json;
+
 use super::{Tweet};
 use hyper::Client;
 use hyper::header::Headers;
 use std::io::Read;
+use std::iter::Iterator;
 
 header! { (Authorization, "Authorization") => [String] }
 header! { (Accept, "Accept") => [String] }
@@ -60,18 +66,26 @@ fn get_own_feed_as_json_string() -> String {
 	body
 }
 
+#[derive(Deserialize, Debug)]
+struct DeserializedTweet {
+	text: String,
+	user: DeserializedUser
+}
 
+#[derive(Deserialize, Debug)]
+struct DeserializedUser {
+	name: String
+}
 
 struct TwitterClient {
 
 }
 
-impl TwitterClient {
-
-}
-
 impl super::TwitterClient for TwitterClient {
 	fn get(&mut self) -> Vec<Tweet> {
-        vec![]
+        let json = get_own_feed_as_json_string();
+        let dtweets: Vec<DeserializedTweet> = serde_json::from_str(&json).unwrap();
+        let tweets = dtweets.into_iter().map(|dt| Tweet {username: dt.user.name, text: dt.text}).collect();
+        tweets
     }
 }

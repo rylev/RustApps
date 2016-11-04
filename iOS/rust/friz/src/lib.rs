@@ -1,4 +1,11 @@
-#[macro_use] extern crate hyper;
+#![feature(proc_macro)]
+
+#[macro_use]
+extern crate hyper;
+
+#[macro_use]
+extern crate serde_derive;
+
 
 pub mod capi;
 mod twitter;
