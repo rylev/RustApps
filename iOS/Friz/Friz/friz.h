@@ -8,11 +8,25 @@ struct RustByteSlice {
 };
 
 int32_t rust_print(char*);
-void* twitter_create(void);
-void twitter_destroy(void*);
-void* tweet_list_create(void*);
-void tweet_list_destroy(void*);
-void* tweet_list_get(void*, size_t);
-size_t tweet_list_len(void*);
-struct RustByteSlice tweet_get_username(void*);
-struct RustByteSlice tweet_get_text(void*);
+
+typedef struct CTwitterClient {} CTwitterClient;
+
+CTwitterClient* twitter_create(void);
+void twitter_destroy(CTwitterClient*);
+
+typedef struct CTweetList {} CTweetList;
+
+CTweetList* tweet_list_create(CTwitterClient*);
+void tweet_list_destroy(CTweetList*);
+size_t tweet_list_len(CTweetList*);
+
+typedef struct CTweet {} CTweet;
+
+CTweet* tweet_list_get(CTweetList*, size_t);
+struct RustByteSlice tweet_get_username(CTweet*);
+struct RustByteSlice tweet_get_text(CTweet*);
+
+
+struct Hello {
+    int x, y;
+};

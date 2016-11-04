@@ -11,7 +11,7 @@ import UIKit
 class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     
     let client = twitter_create()
-    var list : FFIArray<Tweet>! = nil
+    var list : FFIArray<CTweetList, CTweet, Tweet>! = nil
     
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return list.count()
@@ -33,9 +33,10 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
         let wrap = { (pointer) -> Tweet? in Tweet(pointer: pointer) }
         let create = { () in tweet_list_create(self.client) }
-        self.list = FFIArray<Tweet>(create: create, access: tweet_list_get, size: tweet_list_len, wrap: wrap, destroy: tweet_list_destroy)
+        self.list = FFIArray(create: create, access: tweet_list_get, size: tweet_list_len, wrap: wrap, destroy: tweet_list_destroy)
     }
     
     deinit {
@@ -48,7 +49,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
 }
 
 struct Tweet {
-    let pointer: UnsafeMutablePointer<Void>
+    let pointer: UnsafeMutablePointer<CTweet>
     
     func username() -> String {
         return tweet_get_username(self.pointer).asString()!
@@ -59,19 +60,24 @@ struct Tweet {
     }
 }
 
-class FFIArray<T> {
-    let pointer: UnsafeMutablePointer<Void>
-    let access: (UnsafeMutablePointer<Void>, size_t) -> UnsafeMutablePointer<Void>
-    let wrap: (UnsafeMutablePointer<Void>) -> T?
-    let size: (UnsafeMutablePointer<Void>) -> size_t
-    let destroy: (UnsafeMutablePointer<Void>) -> Void
+class FFIArray<CList, CItem, Item> {
+
+    typealias ListHandle = UnsafeMutablePointer<CList>
+    typealias ItemHandle = UnsafeMutablePointer<CItem>
+
+    
+    let pointer: ListHandle
+    let access: (ListHandle, size_t) -> ItemHandle
+    let wrap: (ItemHandle) -> Item?
+    let size: (ListHandle) -> size_t
+    let destroy: (ListHandle) -> Void
     
     init (
-        create: () -> UnsafeMutablePointer<Void>,
-        access: (UnsafeMutablePointer<Void>, size_t) -> UnsafeMutablePointer<Void>,
-        size: (UnsafeMutablePointer<Void>) -> size_t,
-        wrap: (UnsafeMutablePointer<Void>) -> T?,
-        destroy: (UnsafeMutablePointer<Void>) -> Void
+        create: () -> ListHandle,
+        access: (ListHandle, size_t) -> ItemHandle,
+        size: (ListHandle) -> size_t,
+        wrap: (ItemHandle) -> Item?,
+        destroy: (ListHandle) -> Void
     ) {
         self.wrap = wrap
         self.destroy = destroy
@@ -84,7 +90,7 @@ class FFIArray<T> {
         return self.size(self.pointer) as Int
     }
     
-    subscript(index: Int) -> T? {
+    subscript(index: Int) -> Item? {
         let index = index as size_t
         let item = self.access(self.pointer, index)
         if item != nil {
