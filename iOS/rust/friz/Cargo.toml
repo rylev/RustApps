@@ -2,9 +2,13 @@
 name = "friz"
 version = "0.0.1"
 authors = ["Ryan Levick <ryan.levick@gmail.com>"]
+build = "build.rs"
 
 [lib]
 crate-type = ["staticlib"]
+
+[build-dependencies]
+rusty-cheddar = "*"
 
 [dependencies]
 hyper = "*"

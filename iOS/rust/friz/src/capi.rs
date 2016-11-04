@@ -2,53 +2,44 @@ use super::{TwitterAPIClient, TwitterClient, Tweet};
 use std;
 use std::os::raw::{c_char};
 use std::ffi::CStr;
+use std::vec::Vec;
 
 #[repr(C)]
 pub struct RustByteSlice {
     bytes: *const u8,
     length: usize,
 }
+pub type CTwitterClient = ();
+pub type CTweetList = ();
+pub type CTweet = ();
 
 #[no_mangle]
-pub extern "C" fn rust_print(c_string_pointer: *const c_char) {
-    let cstring = unsafe { CStr::from_ptr(c_string_pointer) };
-    print_bytes(cstring.to_bytes())
-}
-
-fn print_bytes(bytes: &[u8]) {
-    if let Ok(string) = std::str::from_utf8(bytes) {
-        println!("{}", string)
-    }
-}
-
-#[no_mangle]
-pub extern "C" fn twitter_create() -> *mut TwitterAPIClient {
+pub extern "C" fn twitter_create() -> *mut CTwitterClient {
     let twitter = Box::new(TwitterAPIClient {});
 
-    Box::into_raw(twitter)
+    Box::into_raw(twitter) as *mut CTwitterClient
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn twitter_destroy(twitter: *mut TwitterAPIClient) {
-    Box::from_raw(twitter);
+pub unsafe extern "C" fn twitter_destroy(twitter: *mut CTwitterClient) {
+    Box::from_raw(twitter as *mut TwitterAPIClient);
 }
 
-pub type TweetList = std::vec::Vec<Tweet>;
 #[no_mangle]
-pub unsafe extern "C" fn tweet_list_create(twitter: *mut TwitterAPIClient) -> *mut TweetList {
-    let mut twitter = Box::from_raw(twitter);
+pub unsafe extern "C" fn tweet_list_create(twitter: *mut CTwitterClient) -> *mut CTweetList {
+    let mut twitter = Box::from_raw(twitter as *mut TwitterAPIClient);
     let vec = twitter.get();
-    Box::into_raw(Box::new(vec))
+    Box::into_raw(Box::new(vec)) as *mut CTweetList
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn tweet_list_destroy(tweet_iter: *mut TweetList) {
-    Box::from_raw(tweet_iter);
+pub unsafe extern "C" fn tweet_list_destroy(tweet_iter: *mut CTweetList) {
+    Box::from_raw(tweet_iter as *mut Vec<Tweet>);
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn tweet_list_get(tweet_list: *mut TweetList, index: usize) -> *const Tweet {
-    let tweet_list = tweet_list as *mut TweetList;
+pub unsafe extern "C" fn tweet_list_get(tweet_list: *mut CTweetList, index: usize) -> *const CTweet {
+    let tweet_list = tweet_list as *mut Vec<Tweet>;
     let vec = Box::from_raw(tweet_list);
 
     let ptr : *const Tweet = vec.get(index)
@@ -56,12 +47,12 @@ pub unsafe extern "C" fn tweet_list_get(tweet_list: *mut TweetList, index: usize
         .unwrap_or(std::ptr::null());
     // Covert back to raw pointer so vec won't be dropped
     Box::into_raw(vec);
-    ptr
+    ptr as *const CTweet
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn tweet_list_len(tweet_list: *mut TweetList) -> usize {
-    let tweet_list = tweet_list as *mut TweetList;
+pub unsafe extern "C" fn tweet_list_len(tweet_list: *mut CTweetList) -> usize {
+    let tweet_list = tweet_list as *mut Vec<Tweet>;
     let list = Box::from_raw(tweet_list);
     let len = list.len();
     // Covert back to raw pointer so vec won't be dropped
@@ -70,8 +61,8 @@ pub unsafe extern "C" fn tweet_list_len(tweet_list: *mut TweetList) -> usize {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn tweet_get_username(tweet: *mut Tweet) -> RustByteSlice {
-    let tweet = Box::from_raw(tweet);
+pub unsafe extern "C" fn tweet_get_username(tweet: *mut CTweet) -> RustByteSlice {
+    let tweet = Box::from_raw(tweet as *mut Tweet);
     let slice = {
         let name = &tweet.username;
         RustByteSlice {
@@ -84,8 +75,8 @@ pub unsafe extern "C" fn tweet_get_username(tweet: *mut Tweet) -> RustByteSlice 
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn tweet_get_text(tweet: *mut Tweet) -> RustByteSlice {
-    let tweet = Box::from_raw(tweet);
+pub unsafe extern "C" fn tweet_get_text(tweet: *mut CTweet) -> RustByteSlice {
+    let tweet = Box::from_raw(tweet as *mut Tweet);
     let slice = {
         let text = &tweet.text;
         RustByteSlice {
