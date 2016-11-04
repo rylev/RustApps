@@ -34,9 +34,14 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let wrap = { (pointer) -> Tweet? in Tweet(pointer: pointer) }
-        let create = { () in tweet_list_create(self.client) }
-        self.list = FFIArray(create: create, access: tweet_list_get, size: tweet_list_len, wrap: wrap, destroy: tweet_list_destroy)
+        let handle = tweet_list_create(self.client)
+        self.list = FFIArray(
+            handle: handle,
+            access: tweet_list_get,
+            size: tweet_list_len,
+            wrap: { Tweet(pointer: $0) },
+            destroy: tweet_list_destroy
+        )
     }
     
     deinit {
@@ -66,14 +71,14 @@ class FFIArray<CList, CItem, Item> {
     typealias ItemHandle = UnsafeMutablePointer<CItem>
 
     
-    let pointer: ListHandle
+    let handle: ListHandle
     let access: (ListHandle, size_t) -> ItemHandle
     let wrap: (ItemHandle) -> Item?
     let size: (ListHandle) -> size_t
     let destroy: (ListHandle) -> Void
     
     init (
-        create: () -> ListHandle,
+        handle: ListHandle,
         access: (ListHandle, size_t) -> ItemHandle,
         size: (ListHandle) -> size_t,
         wrap: (ItemHandle) -> Item?,
@@ -83,16 +88,16 @@ class FFIArray<CList, CItem, Item> {
         self.destroy = destroy
         self.size = size
         self.access = access
-        pointer = create()
+        self.handle = handle
     }
     
     func count() -> Int {
-        return self.size(self.pointer) as Int
+        return self.size(self.handle) as Int
     }
     
     subscript(index: Int) -> Item? {
         let index = index as size_t
-        let item = self.access(self.pointer, index)
+        let item = self.access(self.handle, index)
         if item != nil {
             return self.wrap(item)
         } else {
@@ -101,8 +106,8 @@ class FFIArray<CList, CItem, Item> {
     }
     
     deinit {
-        if self.pointer != nil {
-            self.destroy(self.pointer)
+        if self.handle != nil {
+            self.destroy(self.handle)
         }
     }
 
