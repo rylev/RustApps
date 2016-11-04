@@ -7,4 +7,10 @@ authors = ["Ryan Levick <ryan.levick@gmail.com>"]
 crate-type = ["staticlib"]
 
 [dependencies]
-libc = "0.2.15"
+hyper = "*"
+rustc-serialize = "*"
+url = "*"
+oauthcli = "*"
+serde_derive = "*"
+serde = "*"
+serde_json = "*"

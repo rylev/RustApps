@@ -1,24 +1,19 @@
-extern crate libc;
-pub mod capi;
+#![feature(proc_macro)]
 
+#[macro_use]
+extern crate hyper;
+
+#[macro_use]
+extern crate serde_derive;
+
+
+pub mod capi;
+pub mod twitter;
+
+pub use twitter::TwitterAPIClient;
 
 trait TwitterClient {
     fn get(&mut self) -> Vec<Tweet>;
-}
-
-#[repr(C)]
-pub struct Twitter {}
-
-impl Twitter {
-    fn new() -> Twitter {
-        Twitter {}
-    }
-}
-
-impl TwitterClient for Twitter {
-    fn get(&mut self) -> Vec<Tweet> {
-        vec![Tweet::new("Ryan Levick".to_owned(), "Some Text".to_owned())]
-    }
 }
 
 pub struct Tweet {
@@ -44,11 +39,4 @@ impl Tweet {
     pub fn text(&self) -> &str {
         &self.text
     }
-}
-
-
-#[test]
-fn twitter_returns_nonempty_vector() {
-    let mut twitter = Twitter::new();
-    assert!(!twitter.get().is_empty());
 }

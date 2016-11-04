@@ -1,13 +1,12 @@
-use super::{Twitter, TwitterClient, Tweet};
+use super::{TwitterAPIClient, TwitterClient, Tweet};
 use std;
 use std::os::raw::{c_char};
 use std::ffi::CStr;
-use libc::size_t;
 
 #[repr(C)]
 pub struct RustByteSlice {
     bytes: *const u8,
-    length: size_t,
+    length: usize,
 }
 
 #[no_mangle]
@@ -23,20 +22,20 @@ fn print_bytes(bytes: &[u8]) {
 }
 
 #[no_mangle]
-pub extern "C" fn twitter_create() -> *mut Twitter {
-    let twitter = Box::new(Twitter::new());
+pub extern "C" fn twitter_create() -> *mut TwitterAPIClient {
+    let twitter = Box::new(TwitterAPIClient {});
 
     Box::into_raw(twitter)
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn twitter_destroy(twitter: *mut Twitter) {
+pub unsafe extern "C" fn twitter_destroy(twitter: *mut TwitterAPIClient) {
     Box::from_raw(twitter);
 }
 
 pub type TweetIter = std::vec::IntoIter<Tweet>;
 #[no_mangle]
-pub unsafe extern "C" fn tweet_iter_create(twitter: *mut Twitter) -> *mut TweetIter {
+pub unsafe extern "C" fn tweet_iter_create(twitter: *mut TwitterAPIClient) -> *mut TweetIter {
     let mut twitter = Box::from_raw(twitter);
     let vec = twitter.get();
     Box::into_raw(Box::new(vec.into_iter()))
