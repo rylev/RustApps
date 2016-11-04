@@ -1,6 +1,7 @@
-extern crate libc;
-pub mod capi;
+#[macro_use] extern crate hyper;
 
+pub mod capi;
+mod twitter;
 
 trait TwitterClient {
     fn get(&mut self) -> Vec<Tweet>;

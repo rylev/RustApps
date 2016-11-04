@@ -2,12 +2,11 @@ use super::{Twitter, TwitterClient, Tweet};
 use std;
 use std::os::raw::{c_char};
 use std::ffi::CStr;
-use libc::size_t;
 
 #[repr(C)]
 pub struct RustByteSlice {
     bytes: *const u8,
-    length: size_t,
+    length: usize,
 }
 
 #[no_mangle]
