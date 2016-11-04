@@ -33,30 +33,40 @@ pub unsafe extern "C" fn twitter_destroy(twitter: *mut TwitterAPIClient) {
     Box::from_raw(twitter);
 }
 
-pub type TweetIter = std::vec::IntoIter<Tweet>;
+pub type TweetList = std::vec::Vec<Tweet>;
 #[no_mangle]
-pub unsafe extern "C" fn tweet_iter_create(twitter: *mut TwitterAPIClient) -> *mut TweetIter {
+pub unsafe extern "C" fn tweet_list_create(twitter: *mut TwitterAPIClient) -> *mut TweetList {
     let mut twitter = Box::from_raw(twitter);
     let vec = twitter.get();
-    Box::into_raw(Box::new(vec.into_iter()))
+    Box::into_raw(Box::new(vec))
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn tweet_iter_destroy(tweet_iter: *mut TweetIter) {
+pub unsafe extern "C" fn tweet_list_destroy(tweet_iter: *mut TweetList) {
     Box::from_raw(tweet_iter);
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn tweet_iter_next(twitter_result: *mut TweetIter) -> *mut Tweet {
-    let twitter_result = twitter_result as *mut std::vec::IntoIter<Tweet>;
-    let mut iter = Box::from_raw(twitter_result);
-    let ptr = iter.next().
-        map(|t| Box::into_raw(Box::new(t))).
-        unwrap_or(std::ptr::null_mut());
+pub unsafe extern "C" fn tweet_list_get(tweet_list: *mut TweetList, index: usize) -> *const Tweet {
+    let tweet_list = tweet_list as *mut TweetList;
+    let vec = Box::from_raw(tweet_list);
 
-    // Covert back to raw pointer so iter won't be dropped
-    Box::into_raw(iter);
+    let ptr : *const Tweet = vec.get(index)
+        .map(|t| t as *const Tweet)
+        .unwrap_or(std::ptr::null());
+    // Covert back to raw pointer so vec won't be dropped
+    Box::into_raw(vec);
     ptr
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tweet_list_len(tweet_list: *mut TweetList) -> usize {
+    let tweet_list = tweet_list as *mut TweetList;
+    let list = Box::from_raw(tweet_list);
+    let len = list.len();
+    // Covert back to raw pointer so vec won't be dropped
+    Box::into_raw(list);
+    len
 }
 
 #[no_mangle]
@@ -85,11 +95,6 @@ pub unsafe extern "C" fn tweet_get_text(tweet: *mut Tweet) -> RustByteSlice {
     };
     Box::into_raw(tweet);
     slice
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn tweet_destroy(tweet: *mut Tweet) {
-    Box::from_raw(tweet);
 }
 
 #[cfg(test)]
