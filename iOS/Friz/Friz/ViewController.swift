@@ -10,7 +10,8 @@ import UIKit
 
 class ViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     
-    let client = twitter_create()
+    @IBOutlet weak var updateButton: UIButton!
+    var client : UnsafeMutablePointer<CTwitterClient> = nil
     var list : FFIArray<CTweetList, CTweet, Tweet>! = nil
     
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -31,13 +32,18 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         print("selecting things")
     }
     
-    func onListUpdated(evt: CTweetListEvent) {
-        
+    func onListUpdated(evt: UnsafePointer<CTwitterEvent>) {
+        updateButton.titleLabel!.text = "\(evt.memory.count) new tweets";
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        client = twitter_create();
+        twitter_set_event_handler(client, to_ptr(self), { (ctx, evt) in
+            let o : ViewController = from_ptr(ctx);
+            o.onListUpdated(evt);
+        });
+
         let list_handle = tweet_list_create(self.client);
         self.list = FFIArray(
             handle: list_handle,
@@ -55,6 +61,14 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
     }
+}
+
+func to_ptr<T: AnyObject>(o: T) -> UnsafeMutablePointer<Void> {
+    return UnsafeMutablePointer(Unmanaged.passUnretained(o).toOpaque());
+}
+
+func from_ptr<T: AnyObject>(ptr: UnsafeMutablePointer<Void>) -> T {
+    return Unmanaged<T>.fromOpaque(COpaquePointer(ptr)).takeUnretainedValue();
 }
 
 struct Tweet {
