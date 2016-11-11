@@ -15,12 +15,13 @@ pub use capi::*;
 pub use twitter::TwitterAPIClient;
 
 trait TwitterClient {
-    fn get(&mut self) -> Vec<Tweet>;
+    fn get(&mut self, since_id: Option<u64>) -> Vec<Tweet>;
 }
 
 pub struct Tweet {
     username: String,
-    text: String
+    text: String,
+    id: u64
 }
 
 impl Drop for Tweet {
@@ -30,8 +31,8 @@ impl Drop for Tweet {
 }
 
 impl Tweet {
-    fn new(username: String, text: String) -> Tweet {
-        Tweet { username: username, text: text }
+    fn new(username: String, text: String, id: u64) -> Tweet {
+        Tweet { username: username, text: text, id: id }
     }
 
     pub fn username(&self) -> &str {

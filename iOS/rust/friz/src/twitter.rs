@@ -89,11 +89,11 @@ pub struct TwitterAPIClient {
 }
 
 impl super::TwitterClient for TwitterAPIClient {
-	fn get(&mut self) -> Vec<Tweet> {
-        let json = get_own_feed_as_json_string(None);
+	fn get(&mut self, since_id: Option<u64>) -> Vec<Tweet> {
+        let json = get_own_feed_as_json_string(since_id);
         let dtweets: Vec<DeserializedTweet> = serde_json::from_str(&json).unwrap();
         let tweets = dtweets.into_iter()
-        	.map(|dt| Tweet::new(dt.user.name, dt.text))
+        	.map(|dt| Tweet::new(dt.user.name, dt.text, dt.id))
         	.collect();
 
         tweets

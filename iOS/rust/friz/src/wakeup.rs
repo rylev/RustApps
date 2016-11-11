@@ -10,8 +10,7 @@ pub struct WakeupReceiver<'a> {
 
 impl<'a> WakeupReceiver<'a> {
   fn invoke(&mut self) {
-    let c = &mut self.callback;
-    c();
+    (self.callback)();
   }
 }
 

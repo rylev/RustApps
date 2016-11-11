@@ -46,7 +46,7 @@ pub unsafe extern "C" fn twitter_destroy(twitter: *mut CTwitterClient) {
 #[no_mangle]
 pub unsafe extern "C" fn tweet_list_create(twitter: *mut CTwitterClient) -> *mut CTweetList {
     let mut twitter = Box::from_raw(twitter as *mut TwitterAPIClient);
-    let vec = twitter.get();
+    let vec = twitter.get(None);
     Box::into_raw(Box::new(vec)) as *mut CTweetList
 }
 
