@@ -9,6 +9,7 @@ extern crate serde_derive;
 
 pub mod capi;
 pub mod twitter;
+pub mod wakeup;
 
 pub use capi::*;
 pub use twitter::TwitterAPIClient;
