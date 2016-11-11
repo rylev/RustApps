@@ -4,6 +4,7 @@ pub trait WakeupSender : Drop {
 
 pub struct WakeupReceiver<'a> {
   callback: &'a mut FnMut(),
+  #[allow(dead_code)]
   impl_ptr: Box<Drop>
 }
 
@@ -18,15 +19,20 @@ pub trait WakeupBuilder {
   fn create_wakeup_channel<'a>(&mut self, callback: &'a mut FnMut()) -> (Box<WakeupSender>, Box<WakeupReceiver<'a>>);
 }
 
-/*
-#[cfg(os="osx" or os="ios")]
-*/
+#[cfg(any(target_os="macos", target_os="ios"))]
+pub fn create_wakeup_builder() -> apple::WakeupBuilder {
+  apple::WakeupBuilder::new()
+}
+
+#[cfg(any(target_os="macos", target_os="ios"))]
 mod apple {
 
   extern crate std;
 
   use std::os::raw::c_void;
 
+  #[allow(non_camel_case_types)]
+  #[allow(dead_code)]
   mod ffi {
 
     use std::os::raw::c_void;
@@ -76,12 +82,12 @@ mod apple {
     }
   }
 
-  struct WakeupBuilder {
+  pub struct WakeupBuilder {
     queue: ffi::dispatch_queue_t
   }
 
   impl WakeupBuilder {
-    fn new() -> WakeupBuilder {
+    pub fn new() -> WakeupBuilder {
       WakeupBuilder {
         queue: unsafe {ffi::dispatch_get_main_queue()}
       }
@@ -132,7 +138,6 @@ mod apple {
     }
   }
 
-  #[no_mangle]
   extern "C" fn wakeup_event_handler(context: *mut c_void) {
     //if the context has been set to null, it means the receiver was dropped
     //this can only happen in the small peroid of time between
