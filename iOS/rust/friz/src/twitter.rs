@@ -18,7 +18,7 @@ header! { (Authorization, "Authorization") => [String] }
 header! { (Accept, "Accept") => [String] }
 header! { (ContentType, "Content-Type") => [String] }
 
-fn get_own_feed_as_json_string() -> String {
+fn get_own_feed_as_json_string(since_id: Option<u64>) -> String {
 
     //Change these values to your real Twitter API credentials
 	let consumer_key = "bMKb6A4X8fWYVEeAvQ0U82Je7";
@@ -28,7 +28,12 @@ fn get_own_feed_as_json_string() -> String {
 
     //Track words
     //let params: Vec<(String, String)> = vec![("track".to_string(), "london".to_string())];
-    let params: Vec<(String, String)> = vec![];
+    let mut params: Vec<(String, String)> = vec![];
+
+    if let Some(id) = since_id {
+    	params.push(("since_id".to_owned(), id.to_string()))
+    }
+
     //https://api.twitter.com/1.1/search/tweets.json?q=#ceta&count=4
 	let url = "https://api.twitter.com/1.1/statuses/home_timeline.json";
 
@@ -69,7 +74,8 @@ fn get_own_feed_as_json_string() -> String {
 #[derive(Deserialize, Debug)]
 struct DeserializedTweet {
 	text: String,
-	user: DeserializedUser
+	user: DeserializedUser,
+	id: u64
 }
 
 #[derive(Deserialize, Debug)]
@@ -84,7 +90,7 @@ pub struct TwitterAPIClient {
 
 impl super::TwitterClient for TwitterAPIClient {
 	fn get(&mut self) -> Vec<Tweet> {
-        let json = get_own_feed_as_json_string();
+        let json = get_own_feed_as_json_string(None);
         let dtweets: Vec<DeserializedTweet> = serde_json::from_str(&json).unwrap();
         let tweets = dtweets.into_iter()
         	.map(|dt| Tweet::new(dt.user.name, dt.text))
