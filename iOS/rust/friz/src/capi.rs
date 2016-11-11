@@ -1,6 +1,6 @@
 use super::{TwitterAPIClient, TwitterClient, Tweet};
 use std;
-use std::os::raw::{c_char};
+use std::os::raw::{c_char, c_void};
 use std::ffi::CStr;
 use std::vec::Vec;
 
@@ -13,12 +13,30 @@ pub type CTwitterClient = ();
 pub type CTweetList = ();
 pub type CTweet = ();
 
+#[repr(C)]
+pub struct CTweetListEvent {
+    count: u32
+}
+
 #[no_mangle]
 pub extern "C" fn twitter_create() -> *mut CTwitterClient {
     let twitter = Box::new(TwitterAPIClient {});
 
     Box::into_raw(twitter) as *mut CTwitterClient
 }
+
+#[no_mangle]
+pub unsafe extern "C" fn twitter_set_event_handler(
+    twitter: *mut CTwitterClient,
+    event_ctx: *mut c_void,
+    callback: extern "C" fn(*mut c_void, CTweetListEvent)
+) {
+    let mut twitter = Box::from_raw(twitter as *mut TwitterAPIClient);
+    
+    Box::into_raw(twitter);
+}
+
+
 
 #[no_mangle]
 pub unsafe extern "C" fn twitter_destroy(twitter: *mut CTwitterClient) {
