@@ -30,13 +30,17 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         print("selecting things")
     }
+    
+    func onListUpdated(evt: CTweetListEvent) {
+        
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let handle = tweet_list_create(self.client)
+        let list_handle = tweet_list_create(self.client);
         self.list = FFIArray(
-            handle: handle,
+            handle: list_handle,
             access: tweet_list_get,
             size: tweet_list_len,
             wrap: { Tweet(pointer: $0) },
