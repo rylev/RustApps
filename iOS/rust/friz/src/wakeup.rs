@@ -1,27 +1,36 @@
-pub trait WakeupSender : Drop {
+pub trait WakeupSender : Drop + Send {
   fn wakeup(&self);
 }
 
-pub struct WakeupReceiver<'a> {
-  callback: &'a mut FnMut(),
+pub struct WakeupReceiver {
+  wakeup_handler: Option<Box<FnMut()>>,
   #[allow(dead_code)]
   impl_ptr: Box<Drop>
 }
 
-impl<'a> WakeupReceiver<'a> {
+impl WakeupReceiver {
   fn invoke(&mut self) {
-    (self.callback)();
+    if let Some(ref mut callback) = self.wakeup_handler {
+      callback();
+    }
+  }
+
+  pub fn set_wakeup_handler(&mut self, wakeup_handler: Option<Box<FnMut()>>) {
+    self.wakeup_handler = wakeup_handler;
   }
 }
 
 pub trait WakeupBuilder {
-  fn create_wakeup_channel<'a>(&mut self, callback: &'a mut FnMut()) -> (Box<WakeupSender>, Box<WakeupReceiver<'a>>);
+  fn create_wakeup_channel(&self) -> (Box<WakeupSender>, Box<WakeupReceiver>);
 }
 
 #[cfg(any(target_os="macos", target_os="ios"))]
 pub fn create_wakeup_builder() -> apple::WakeupBuilder {
   apple::WakeupBuilder::new()
 }
+
+#[cfg(any(target_os="macos", target_os="ios"))]
+pub type WakeupBuilderImpl = apple::WakeupBuilder;
 
 #[cfg(any(target_os="macos", target_os="ios"))]
 mod apple {
@@ -94,7 +103,7 @@ mod apple {
   }
 
   impl super::WakeupBuilder for WakeupBuilder {
-    fn create_wakeup_channel<'a>(&mut self, callback: &'a mut FnMut()) -> (Box<super::WakeupSender>, Box<super::WakeupReceiver<'a>>) {
+    fn create_wakeup_channel(&self) -> (Box<super::WakeupSender>, Box<super::WakeupReceiver>) {
       let evt_source = unsafe {
         ffi::dispatch_source_create(
           ffi::_dispatch_source_type_data_add,
@@ -116,7 +125,7 @@ mod apple {
       );
       let receiver = Box::new(super::WakeupReceiver {
         impl_ptr: impl_trait_obj,
-        callback: callback
+        wakeup_handler: None
       });
 
       let receiver_ptr = Box::into_raw(receiver);
@@ -144,6 +153,8 @@ mod apple {
     //and the time when it actually is canceled and guaranteed to not callback
     //the event handler anymore. The right thing to do is to drop the event since
     //the receiving part has been dropped.
+
+    //TODO: use enum optimization here?
     if context == std::ptr::null_mut() as *mut c_void {
       return;
     }
@@ -177,6 +188,8 @@ mod apple {
   struct WakeupSender {
     evt_source: ffi::dispatch_source_t,
   }
+
+  unsafe impl Send for WakeupSender {}
 
   impl super::WakeupSender for WakeupSender {
     fn wakeup(&self) {

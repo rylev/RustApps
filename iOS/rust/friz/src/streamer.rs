@@ -1,34 +1,35 @@
 use std::sync::mpsc::{channel, Sender, Receiver};
 use std::thread;
-use ::wakeup::WakeupBuilder;
-use ::TwitterClient;
+use ::wakeup::{WakeupBuilder, WakeupReceiver};
+use ::{TwitterClient, Tweet};
+use std::time::Duration;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 pub struct TwitterStreamer {
-  wakeup_receiver: WakeupReceiver,
+  wakeup_receiver: Box<WakeupReceiver>,
   receiver: Receiver<Vec<Tweet>>,
   tweet_buffer: Vec<Tweet>,
-  event_handler: Option<foo>,
+  event_handler: Option<Box<Fn(u32)>>,
   new_tweet_count: u32
 }
 
 impl TwitterStreamer {
 
-  pub fn new(fetcher: F, wakeup: &mut W) -> TwitterStreamer where F: TwitterClient, W: WakeupBuilder {
+  pub fn start<F, W>(mut fetcher: F, wakeup: &mut W) -> TwitterStreamer where F: TwitterClient + 'static, W: WakeupBuilder {
     
-    let (wakeup_tx, wakeup_rx) = wakeup.create_wakeup_channel(|| {
-      self.on_new_tweets();
-    });
+    let (wakeup_tx, wakeup_rx) = wakeup.create_wakeup_channel();
     
     let (tx, rx) = channel();
 
     thread::spawn(move || {
-      let most_recent_id : Option<u64> = None;
+      let mut most_recent_id : Option<u64> = None;
       loop {
         let tweets = fetcher.get(most_recent_id);
         
         let first_id = tweets.first().map(|ref t| t.id);
-        if let Some(id) = first_id {
-          most_recent_id = Some(id);
+        if first_id.is_some() {
+          most_recent_id = first_id;
         }
 
         tx.send(tweets).unwrap();
@@ -38,16 +39,23 @@ impl TwitterStreamer {
       }
     });
 
-    TwitterStreamer {
+    let mut streamer = RcRefCell::new(TwitterStreamer {
       wakeup_receiver: wakeup_rx,
       receiver: rx,
       tweet_buffer: Vec::new(),
       event_handler: None,
       new_tweet_count: 0
-    }
+    });
+
+    let 
+    streamer.wakeup_receiver.set_wakeup_handler(Some(Box::new(|| {
+      streamer.on_new_tweets();
+    })));
+
+    streamer
   }
 
-  pub fn set_new_tweets_handler(handler) {
+  pub fn set_new_tweets_handler(&mut self, handler: Option<Box<Fn(u32)>>) {
     self.event_handler = handler;
   }
 
@@ -56,13 +64,20 @@ impl TwitterStreamer {
     self.tweet_buffer.clone()
   }
 
+  fn register_handler(&mut self) {
+    self.
+  }
+
   fn on_new_tweets(&mut self) {
     while let Ok(tweets) = self.receiver.try_recv() {
+      self.new_tweet_count += tweets.len() as u32;
+
       for tweet in tweets.into_iter() {
         self.tweet_buffer.insert(0, tweet);
       }
-      self.new_tweet_count += tweets.len();
     }
-    (self.event_handler)(self.new_tweet_count);
+    if let Some(ref handler) = self.event_handler {
+      handler(self.new_tweet_count);
+    }
   }
 }

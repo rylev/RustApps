@@ -1,4 +1,5 @@
-use super::{TwitterAPIClient, TwitterClient, Tweet};
+use super::{AppRoot, TwitterAPIClient, TwitterClient, Tweet};
+use super::streamer::TwitterStreamer;
 use std;
 use std::os::raw::{c_char, c_void};
 use std::ffi::CStr;
@@ -17,36 +18,66 @@ pub type CTweet = ();
 pub struct CTweetListEvent {
     count: u32
 }
+/*
+pub struct CEventCallback<T> {
+    event_ctx: *mut c_void,
+    callback: extern "C" fn(ctx: *mut c_void, event: T)
+}
+
+impl<T> Fn<(T)> for CEventCallback<T> {
+    fn call(&self, args: T) {
+        (self.callback)(self.event_ctx, event.0);
+    }
+}
+*/
 
 #[no_mangle]
 pub extern "C" fn twitter_create() -> *mut CTwitterClient {
-    let twitter = Box::new(TwitterAPIClient {});
+    let mut wakeup_builder = ::wakeup::create_wakeup_builder();
+    let client = TwitterAPIClient {};
+    let streamer = TwitterStreamer::start(client, &mut wakeup_builder);
+    let root = AppRoot {
+        wakeup_builder: wakeup_builder,
+        twitter_streamer: streamer
+    };
+    let root_box = Box::new(root);
 
-    Box::into_raw(twitter) as *mut CTwitterClient
+    Box::into_raw(root_box) as *mut CTwitterClient
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn twitter_set_event_handler(
     twitter: *mut CTwitterClient,
     event_ctx: *mut c_void,
-    callback: extern "C" fn(*mut c_void, CTweetListEvent)
+    callback: Option<extern "C" fn(*mut c_void, CTweetListEvent)>
 ) {
-    let mut twitter = Box::from_raw(twitter as *mut TwitterAPIClient);
+    let mut root = Box::from_raw(twitter as *mut AppRoot);
     
-    Box::into_raw(twitter);
+    if let Some(callback_fn) = callback {
+        let closure = Box::new(move |tweet_count: u32| {
+            callback_fn(event_ctx, CTweetListEvent { count: tweet_count });
+        });
+        root.twitter_streamer.set_new_tweets_handler(Some(closure));
+    }
+    else {
+        root.twitter_streamer.set_new_tweets_handler(None);
+    }
+
+    Box::into_raw(root);
 }
 
 
 
 #[no_mangle]
-pub unsafe extern "C" fn twitter_destroy(twitter: *mut CTwitterClient) {
-    Box::from_raw(twitter as *mut TwitterAPIClient);
+pub unsafe extern "C" fn twitter_destroy(root: *mut CTwitterClient) {
+    Box::from_raw(root as *mut AppRoot);
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn tweet_list_create(twitter: *mut CTwitterClient) -> *mut CTweetList {
-    let mut twitter = Box::from_raw(twitter as *mut TwitterAPIClient);
-    let vec = twitter.get(None);
+pub unsafe extern "C" fn tweet_list_create(root: *mut CTwitterClient) -> *mut CTweetList {
+    let mut root = Box::from_raw(root as *mut AppRoot);
+    let vec = root.twitter_streamer.clone_list();
+    //TODO: root gets dropped here?
     Box::into_raw(Box::new(vec)) as *mut CTweetList
 }
 

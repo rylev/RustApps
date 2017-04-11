@@ -10,14 +10,24 @@ extern crate serde_derive;
 pub mod capi;
 pub mod twitter;
 pub mod wakeup;
+pub mod streamer;
 
 pub use capi::*;
 pub use twitter::TwitterAPIClient;
 
-trait TwitterClient {
+
+pub struct AppRootTemplate<W: wakeup::WakeupBuilder> {
+    wakeup_builder: W,
+    twitter_streamer: std::cell::RefCell<streamer::TwitterStreamer>
+}
+
+pub type AppRoot = AppRootTemplate<wakeup::WakeupBuilderImpl>;
+
+pub trait TwitterClient : Send {
     fn get(&mut self, since_id: Option<u64>) -> Vec<Tweet>;
 }
 
+#[derive(Clone)]
 pub struct Tweet {
     username: String,
     text: String,
